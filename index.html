@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8"/>
+	<title>Hapaniya Ver 1.0</title>
+	<style type="text/css">
+		*{ padding: 0; margin: 0; }
+		#Juego {
+			background: linear-gradient(45deg, #2CA37F, #00527F, #2CA37F, #00527F); 
+			display:  block; 
+			margin: auto; 
+			border: 16px solid transparent;
+			border-image: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);
+			border-image-slice: 1;
+		}
+		#instrucciones {
+			border: 16px solid transparent;
+			border-image: url(matriz.png) 45% stretch;
+			background: radial-gradient(#00527F, #2CA37F);
+			display: block;
+			margin: auto;
+		}
+	</style>
+</head>
+<body>
+	<p id="reloj"></p>
+	<canvas id="Juego" width="352" height="354"></canvas>
+	<canvas id="instrucciones" width="352" height="70"></canvas>
+
+	<script type="text/javascript">
+		var canvasJ = document.getElementById("instrucciones");
+		var ctxJ = canvasJ.getContext("2d");
+
+		var min = 0;
+		var sec = 0;
+		var hora = 0;
+		var tiempoJuego;
+		
+
+		function clock(){
+			ctxJ.clearRect(0, 0, canvas.width, canvas.height);
+			sec +=1;
+			if (sec > 59) {
+				sec = 0;
+				min += 1;
+			}
+			if(min > 59) {
+				min = 0;
+				hora += 1;
+			}
+			tiempoJuego = hora + ":" + min + ":" + sec;
+			escribe();	
+		}
+	
+		setInterval(clock, 1000);
+		
+		function escribe(){
+			ctxJ.font = "16px Arial";
+			ctxJ.fillStyle = "#0101a5";
+			ctxJ.fillText("Usa 'A'(↔) y 'S'(↕) y las flechas para jugar.", 10,20);
+			ctxJ.fillText("Tiempo Minimo en Ordenar: ", 20, 60);
+			ctxJ.fillText("Tiempo de Juego:", 20, 40);
+			ctxJ.fillStyle = "#001a00";
+			ctxJ.fillText(tiempoJuego, 150, 40);
+			ctxJ.fillText(getCookie("tiempo"), 220, 60);
+		}	
+
+		function setCookie(cname, cvalue, exdays){
+			var d = new Date();
+			d.setTime(d.getTime() + (exdays*24*60*60*100));
+			var expires = "expires=" + d.toUTCString();
+			document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+		}
+
+		function getCookie(cname){
+			var name = cname + "=";
+			var decodedCookie = decodeURIComponent(document.cookie);
+			var ca = decodedCookie.split(';');
+			for(var i = 0; i < ca.length; i++){
+				var c = ca[i];
+				while(c.charAt(0) == ' '){
+					c = c.substring(1);
+				}
+				if(c.indexOf(name) == 0){
+					return c.substring(name.length, c.length);
+				}
+			}
+			return "";
+		}
+
+	</script>
+
+	<script type="text/javascript">	
+		var canvas = document.getElementById("Juego"); //cargando canvas
+		var ctx = canvas.getContext("2d");
+		var colorCuadro =["red", "blue", "green", "violet", "yellow"];
+		var rojo = 0;
+		var azul = 0;
+		var verde = 0;
+		var violeta = 0;
+		var amarillo = 0;
+		var cuadritoAncho = 32;
+		var rightPressed = false;
+		var leftPressed = false;
+		var upPressed = false;
+		var downPressed = false;
+		var aPressed = false;
+		var sPressed = false;
+		var cursorAlto = 32;
+		var cursorAncho = 64;
+		var cursorX = 0;
+		var cursorY = 0;
+		var random;
+		var random2;
+		var cuantasFilasCuadros = 11;
+		var cuantasColumnasCuadros = 6;
+		var i = 0;
+		var i2 = 4;
+		var numerosColores = [];
+		var conteo;
+		var conteo2;
+
+		var cuadros = [];
+		for (var c = 0; c < cuantasColumnasCuadros; c++) {
+			cuadros[c] = [];
+			for(var r=0; r < cuantasFilasCuadros; r++){
+				cuadros[c][r] = { x:0, y:0, colores: "red" } ;
+			}
+		}
+		random2 = Math.floor(Math.random() * 4);
+		// rellenar cuadritos
+			var cuadritos = [];
+			for (var c = 0; c < cuantasColumnasCuadros; c++) {
+				cuadritos[c] = [];
+				for(var r=0; r < cuantasFilasCuadros; r++){
+					cuadritos[c][r] = { x:0, y:0, colores: "red" };
+				}
+			}
+		
+		for(var c = 0; c < cuantasColumnasCuadros; c++){
+			for(var r = 0; r < cuantasFilasCuadros; r++){
+				random = Math.floor(Math.random() * 5);
+				var cuadroX = c * (cuadritoAncho)+1;
+				var cuadroY = r * (cuadritoAncho)+1;
+				cuadros[c][r].x = cuadroX;
+				cuadros[c][r].y = cuadroY;
+				cuadros[c][r].colores = colorCuadro[random];
+				cuantosFueron(colorCuadro[random]);
+				ctx.beginPath();
+				ctx.rect(cuadroX, cuadroY, cuadritoAncho, cuadritoAncho);
+				ctx.fillStyle = colorCuadro[random];
+				ctx.fill();
+				ctx.closePath();
+			}	
+		}
+
+		numerosColores = [
+			{colores: "red", cuantos: rojo},
+			{colores: "blue", cuantos: azul},
+			{colores: "green", cuantos: verde},
+			{colores: "violet", cuantos: violeta},
+			{colores: "yellow", cuantos: amarillo}
+		];
+		numerosColores.sort(function(a, b){return b.cuantos - a.cuantos});
+		conteo = numerosColores[i].cuantos;
+		conteo2 = numerosColores[i2].cuantos;
+
+		document.addEventListener("keydown", keyDownHandler, false);
+		document.addEventListener("keyup", keyUpHandler, false);
+
+		function collisionDetection() {
+			for(var c = 0; c < cuantasColumnasCuadros; c++){
+				for(var r = 0; r < cuantasFilasCuadros; r++){
+					var cua = cuadros[c][r];
+					if(cursorX == (cua.x-1) && cursorY == (cua.y-1)) {
+						if (aPressed) {
+							var color1 = cuadros[c][r].colores;
+						    var color2 = cuadros[c+1][r].colores;
+							cuadros[c][r].colores = color2;
+							cuadros[c+1][r].colores = color1;
+							aPressed= false;
+						}
+						if (sPressed) {
+							var color1 = cuadros[c][r].colores;
+							var color2 = cuadros[c][r+1].colores;
+							cuadros[c][r].colores = color2;
+							cuadros[c][r+1].colores = color1;
+							sPressed = false;
+						}
+					}
+				}
+			}
+		}
+
+		function mantenCuadros(){
+			for(var c = 0; c < cuantasColumnasCuadros; c++){
+				for(var r = 0; r < cuantasFilasCuadros; r++){
+					var cuadroX = cuadros[c][r].x;
+					var cuadroY = cuadros[c][r].y;
+					var colores = cuadros[c][r].colores;
+					ctx.beginPath();
+					ctx.rect(cuadroX, cuadroY, cuadritoAncho, cuadritoAncho);
+					ctx.fillStyle = colores;
+					ctx.fill();
+					ctx.strokeStyle = "black";
+					ctx.strokeRect(cuadroX, cuadroY, cuadritoAncho, cuadritoAncho);
+					ctx.lineWidth = 2;
+					ctx.closePath();
+				}
+			}
+		}
+
+		function cuantosFueron(color){
+			switch(color){
+				case "red":
+					rojo += 1;
+					break;
+				case "blue":
+					azul += 1;
+					break;
+				case "green":
+					verde += 1;
+					break;
+				case "violet":
+					violeta += 1;
+					break;
+				case "yellow":
+					amarillo += 1;
+					break;
+				default:
+			}
+		}
+
+
+		function keyDownHandler(e) {
+			switch (e.keyCode) {
+				case 65:
+				   aPressed = true;
+				   collisionDetection();
+				   break;
+				case 39:
+					rightPressed = true;
+					break;
+				case 37:
+					leftPressed = true;
+					break;
+				case 38:
+					upPressed = true;
+					break;
+				case 40:
+					downPressed = true;
+					break;
+				case 83:
+					sPressed = true;
+					collisionDetection();
+					break;
+				default:
+
+			}
+		}
+
+		function keyUpHandler(e) {
+			switch (e.keyCode) {
+				case 32:
+				   aPressed = false;
+				   break;
+				case 39:
+					rightPressed = false;
+					break;
+				case 37:
+					leftPressed = false;
+					break;
+				case 38:
+					upPressed = false;
+					break;
+				case 40:
+					downPressed = false;
+					break;
+				case 83:
+					sPressed = false;
+					break;
+				default:
+
+			}
+		}
+
+		function cursor(){
+			ctx.beginPath();
+			ctx.rect(cursorX, cursorY, cursorAncho, cursorAlto);
+			ctx.fillStyle = "rgba(152,152,152,0.7)";
+			ctx.fill();
+			ctx.closePath();
+		}
+
+		function queHacer(){
+			ctx.beginPath();
+			ctx.rect(194,0,16,canvas.height);
+			ctx.fillStyle = "#2c6ca3";
+			ctx.strokeStyle = "black";
+			ctx.strokeRect(194,0,16,canvas.height);
+			ctx.lineWidth = 2;
+			ctx.fill();
+			ctx.closePath();
+			ctx.font = "16px Arial";
+			ctx.fillStyle = "#0101a5";
+			ctx.fillText("Algo caotico, no?", 213, 20);
+			ctx.fillText("Que tal si hacemos", 213, 40);
+			ctx.fillText("algo como esto:", 213, 60);
+			comoHacerlo();
+		}
+
+		function draw(){
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			mantenCuadros();
+			cursor();
+			queHacer();
+			gane();
+			//dibujar la divsion pa saber que hacer =D
+			
+
+			if(rightPressed && cursorX < 128){
+
+				cursorX += 32;
+				rightPressed = false;
+			}
+			else if(leftPressed && cursorX > 0){
+				cursorX -= 32;
+				leftPressed = false;
+			}
+			if(downPressed && cursorY < canvas.height-cursorAlto-2){
+				cursorY += 32;
+				downPressed = false;
+			}
+			else if(upPressed && cursorY > 0) {
+				cursorY -= 32;
+				upPressed = false;
+			}		
+		}
+
+
+		function comoHacerlo(){
+			if (random2 == 1) {
+				for(var c = 0; c < cuantasColumnasCuadros; c++){
+					for(var r = 0; r < cuantasFilasCuadros; r++){
+						var cuadritoX = c * 16 + 232;
+						var cuadritoY = r * 16 + 100;
+						cuadritos[c][r].x = cuadritoX;
+						cuadritos[c][r].y = cuadritoY;
+						ctx.beginPath();
+						ctx.rect(cuadritoX, cuadritoY, 16, 16);
+						if(conteo == 0 ){
+							i += 1;
+							if (i > 4){
+								i = 0;
+							}
+							conteo = numerosColores[i].cuantos;
+						}
+						conteo -= 1;
+						ctx.fillStyle = numerosColores[i].colores;
+						cuadritos[c][r].colores = numerosColores[i].colores;
+						ctx.fill();
+						ctx.strokeStyle = "black";
+						ctx.strokeRect(cuadritoX, cuadritoY, 16, 16);
+						ctx.lineWidth = 1;
+						ctx.closePath();
+					}
+				}
+			}
+			if(random2 == 0) {
+				for(var c = 0; c < cuantasColumnasCuadros; c++){
+					for(var r = 0; r < cuantasFilasCuadros; r++){
+						var cuadritoX = c * 16 + 232;
+						var cuadritoY = r * 16 + 100;
+						cuadritos[c][r].x = cuadritoX;
+						cuadritos[c][r].y = cuadritoY;
+						ctx.beginPath();
+						ctx.rect(cuadritoX, cuadritoY, 16, 16);
+						if(conteo2 == 0 ){
+							i2 -= 1;
+							if (i2 < 0){
+								i2 = 4;
+							}
+							conteo2 = numerosColores[i2].cuantos;
+						}
+						conteo2 -= 1;
+						ctx.fillStyle = numerosColores[i2].colores;
+						cuadritos[c][r].colores = numerosColores[i2].colores;
+						ctx.fill();
+						ctx.strokeStyle = "black";
+						ctx.strokeRect(cuadritoX, cuadritoY, 16, 16);
+						ctx.lineWidth = 1;
+						ctx.closePath();
+					}
+				}
+			}
+			if(random2 == 2) {
+				for(var r = 0; r < cuantasFilasCuadros; r++){
+					for(var c = 0; c < cuantasColumnasCuadros; c++){
+						var cuadritoX = c * 16 + 232;
+						var cuadritoY = r * 16 + 100;
+						cuadritos[c][r].x = cuadritoX;
+						cuadritos[c][r].y = cuadritoY;
+						ctx.beginPath();
+						ctx.rect(cuadritoX, cuadritoY, 16, 16);
+						if(conteo2 == 0 ){
+							i2 -= 1;
+							if (i2 < 0){
+								i2 = 4;
+							}
+							conteo2 = numerosColores[i2].cuantos;
+						}
+						conteo2 -= 1;
+						ctx.fillStyle = numerosColores[i2].colores;
+						cuadritos[c][r].colores = numerosColores[i2].colores;
+						ctx.fill();
+						ctx.strokeStyle = "black";
+						ctx.strokeRect(cuadritoX, cuadritoY, 16, 16);
+						ctx.lineWidth = 1;
+						ctx.closePath();
+					}
+				}
+			}
+			if (random2 == 3) {
+				for(var r = 0; r < cuantasFilasCuadros; r++){
+					for(var c = 0; c < cuantasColumnasCuadros; c++){
+						var cuadritoX = c * 16 + 232;
+						var cuadritoY = r * 16 + 100;
+						cuadritos[c][r].x = cuadritoX;
+						cuadritos[c][r].y = cuadritoY;
+						ctx.beginPath();
+						ctx.rect(cuadritoX, cuadritoY, 16, 16);
+						if(conteo == 0 ){
+							i += 1;
+							if (i > 4){
+								i = 0;
+							}
+							conteo = numerosColores[i].cuantos;
+						}
+						conteo -= 1;
+						ctx.fillStyle = numerosColores[i].colores;
+						cuadritos[c][r].colores = numerosColores[i].colores;
+						ctx.fill();
+						ctx.strokeStyle = "black";
+						ctx.strokeRect(cuadritoX, cuadritoY, 16, 16);
+						ctx.lineWidth = 1;
+						ctx.closePath();
+					}
+				}
+			}
+		}
+
+		function gane(){
+			var sonIguales = 0;
+			//comparar los dos arrays pa ver si son iguales =D
+			for(var c = 0; c < cuantasColumnasCuadros; c++){
+				for(var r = 0; r < cuantasFilasCuadros; r++){
+					var colores = cuadros[c][r].colores;
+					var colorsitos = cuadritos[c][r].colores;
+					if(colores == colorsitos){
+						sonIguales +=1;
+						if(sonIguales == 66){
+							setCookie("tiempo", tiempoJuego, 30);
+							var respuesta = confirm("Wow eres bueno en esto!!! \n Quieres seguir ayudando?");
+							if (respuesta == true){
+								document.location.reload();
+							} else{
+								alert("Awww queriamos seguir jugando contigo \n ten un buen dia =D");
+								document.location.assign("http://www.google.com");
+							}
+						}
+
+					}
+				}
+			}
+		}
+		setInterval(draw, 10);
+	</script>
+</body>
+</html>
